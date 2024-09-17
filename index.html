@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Inscrições</title>
+</head>
+<body>
+    <!-- Modal de Carregamento -->
+    <div id="loadingModal" class="modal">
+        <div class="modal-content">
+            <div class="spinner"></div>
+            <p id="loadingP">Carregando, por favor, aguarde...</p>
+        </div>
+    </div>
+
+    <!-- Inscrições Fechadas -->
+    <div class="container" id="closed" style="display: none;">
+        <h2>Desculpe, as inscrições estão fechadas no momento.</h2>
+        <p>Fique de olho em nossos canais oficiais para saber quando as inscrições serão reabertas.</p>
+    </div>
+
+    <!-- Formulário de Inscrição -->
+    <div class="container" id="form" style="display: none;">
+        <h2>Formulário de Inscrição</h2>
+        <form id="inscricaoForm">
+            <!-- Campo Nome -->
+            <div class="input-container">
+                <input type="text" id="nome" name="nome" required>
+                <label for="nome">Nome</label>
+            </div>
+
+            <!-- Campo ID do Discord -->
+            <div class="input-container">
+                <input type="text" id="discordID" name="discordID" required>
+                <label for="discordID">ID do Discord</label>
+            </div>
+
+            <!-- Seletor de Evento -->
+            <label class="custom-select-label" for="evento">Escolha o evento:</label>
+            <select id="evento" name="evento" required>
+                <option value="">Selecione um Evento</option>
+                <option value="DTI EVENT">DTI EVENT</option>
+                <option value="FTF EVENT">FTF EVENT</option>
+                <option value="MM2 EVENT">MM2 EVENT</option>
+                <option value="DRAWINGS EVENTS">DRAWINGS EVENTS</option>
+            </select><br>
+
+            <!-- Campo Idade -->
+            <div class="input-container">
+                <input type="number" id="idade" name="idade" min="6" required>
+                <label for="idade">Idade</label>
+            </div>
+
+            <!-- Radio para categorias de idade -->
+            <div class="radio-group">
+                <span>Categorias de Idade:</span>
+                <label class="radio-label">
+                    <input type="radio" id="idade8" name="categoria" value="8+" required>
+                    <span>8+</span>
+                </label>
+                <label class="radio-label">
+                    <input type="radio" id="idade18" name="categoria" value="18+" required>
+                    <span>18+</span>
+                </label>
+            </div>
+
+            <!-- Botão de Enviar -->
+            <button type="submit">Enviar Inscrição</button>
+        </form>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBLkwITrYo6vC11wIySzG4Jqr8m6cXWVNs",
+        authDomain: "baconsgirls-b66fa.firebaseapp.com",
+        projectId: "baconsgirls-b66fa",
+        storageBucket: "baconsgirls-b66fa.appspot.com",
+        messagingSenderId: "208547909731",
+        appId: "1:208547909731:web:2285311c4c665e6bdb2856"
+    };
+
+    // Inicializa o Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Função para gerar um código de 6 dígitos
+    function gerarCodigo() {
+        return '#' + Math.floor(100000 + Math.random() * 900000);
+    }
+
+    // Função para verificar se as inscrições estão abertas
+    function verificarInscricoes() {
+        const docRef = db.collection("open-close").doc("1234");
+
+        // Exibe o modal de carregamento
+        document.getElementById("loadingModal").style.display = "block";
+
+        docRef.get().then((doc) => {
+            if (doc.exists) {
+                const isOpen = doc.data().open;
+                if (isOpen) {
+                    document.getElementById("form").style.display = "block";
+                    document.getElementById("closed").style.display = "none";
+                } else {
+                    document.getElementById("form").style.display = "none";
+                    document.getElementById("closed").style.display = "block";
+                }
+            } else {
+                console.log("Documento não encontrado!");
+            }
+        }).catch((error) => {
+            console.error("Erro ao buscar documento:", error);
+        }).finally(() => {
+            // Esconde o modal de carregamento após a verificação
+            document.getElementById("loadingModal").style.display = "none";
+        });
+    }
+
+    // Função para salvar os dados do formulário no Firestore
+    document.getElementById("inscricaoForm").addEventListener("submit", function (event) {
+        event.preventDefault(); // Previne o comportamento padrão de recarregar a página
+
+        // Obtém os valores dos campos do formulário
+        const nome = document.getElementById("nome").value;
+        const discordID = document.getElementById("discordID").value;
+        const evento = document.getElementById("evento").value;
+        const idade = document.getElementById("idade").value;
+        const categoria = document.querySelector('input[name="categoria"]:checked').value;
+        const codigo = gerarCodigo(); // Gera um código de 6 dígitos
+
+        // Salva os dados na coleção "inscricoes"
+        db.collection("inscricoes").add({
+            nome: nome,
+            discordID: discordID,
+            evento: evento,
+            idade: idade,
+            categoria: categoria,
+            codigo: codigo, // Adiciona o código de inscrição
+            dataInscricao: firebase.firestore.FieldValue.serverTimestamp() // Marca a data e hora da inscrição
+        }).then(() => {
+            document.getElementById("loadingModal").style.display = "block";
+            document.getElementById('loadingP').textContent = 'Conectando ao servidor..';
+            setTimeout(() => {
+                document.getElementById('loadingP').textContent = 'Enviando Inscrição..';
+            }, 2000);
+            setTimeout(() => {
+                document.getElementById('loadingP').textContent = 'Inscrito!';
+            }, 4000);
+            setTimeout(() => {
+                document.getElementById("loadingModal").style.display = "none";
+            }, 4500)
+            document.getElementById("inscricaoForm").reset(); // Limpa o formulário
+        }).catch((error) => {
+            console.error("Erro ao enviar inscrição: ", error);
+            alert("Erro ao enviar inscrição. Tente novamente.");
+        });
+    });
+
+    // Executa a verificação ao carregar a página
+    window.onload = verificarInscricoes;
+</script>
+
+</body>
+</html>

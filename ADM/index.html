@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../style.css">
+    <title>Lista de Inscrições</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        h2 {
+            color: #00aaff;
+            border-bottom: 2px solid #00aaff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .registration-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 2px solid #333;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        .registration-item:last-child {
+            border-bottom: none;
+        }
+        .registration-item:hover {
+            background-color: #2c2c2c;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .registration-code {
+            font-weight: bold;
+            color: #00aaff;
+            font-size: 16px;
+        }
+        .registration-details {
+            flex: 1;
+            padding: 0 15px;
+        }
+        .registration-name {
+            font-size: 18px;
+            color: #e0e0e0;
+            margin-bottom: 5px;
+        }
+        .registration-date {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+        .infosplus {
+            display: flex;
+            flex-direction: column;
+            gap: .5rem;
+        }
+        @media (max-width: 768px) {
+            .registration-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .registration-details {
+                padding: 0;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Lista de Inscrições</h2>
+        <div id="registrations">
+            <!-- Inscrições serão listadas aqui -->
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLkwITrYo6vC11wIySzG4Jqr8m6cXWVNs",
+            authDomain: "baconsgirls-b66fa.firebaseapp.com",
+            projectId: "baconsgirls-b66fa",
+            storageBucket: "baconsgirls-b66fa.appspot.com",
+            messagingSenderId: "208547909731",
+            appId: "1:208547909731:web:2285311c4c665e6bdb2856"
+        };
+
+        // Inicializa o Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Objeto para armazenar IDs de inscrições já exibidas
+        const displayedDocs = new Set();
+
+        // Função para listar as inscrições
+        function listarInscricoes() {
+            const registrationsDiv = document.getElementById('registrations');
+            // Limpa a lista atual antes de adicionar novos itens
+            registrationsDiv.innerHTML = '';
+
+            db.collection('inscricoes').orderBy('dataInscricao', 'desc').onSnapshot((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    const docId = doc.id;
+                    if (!displayedDocs.has(docId)) {
+                        const data = doc.data();
+                        const registrationCode = data.codigo;
+                        const registrationName = data.nome;
+                        const registrationEvent = data.evento;
+                        const registrationDCID = data.discordID;
+                        const registrationDate = new Date(data.dataInscricao.seconds * 1000).toLocaleDateString();
+
+                        const registrationItem = document.createElement('div');
+                        registrationItem.className = 'registration-item';
+                        registrationItem.innerHTML = `
+                            <div class="registration-code">${registrationCode}</div>
+                            <div class="registration-details">
+                                <div class="registration-name">${registrationName}</div>
+                                <div class="registration-date">${registrationDate}</div>
+                            </div>
+                            <div class="infosplus">
+                                <div class="registration-date">Evento: ${registrationEvent}</div>
+                                <div class="registration-date">ID: ${registrationDCID}</div>
+                            </div>
+                        `;
+
+                        registrationsDiv.appendChild(registrationItem);
+                        displayedDocs.add(docId); // Adiciona o ID ao conjunto de exibidos
+                    }
+                });
+            });
+        }
+
+        // Executa a função ao carregar a página
+        window.onload = listarInscricoes;
+    </script>
+</body>
+</html>
