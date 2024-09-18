@@ -195,3 +195,29 @@ form button:hover {
 #closed p {
     font-size: 16px;
 }
+
+#toggleButton {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    padding: 10px 20px;
+    border: 2px solid #007bff;
+    background-color: transparent;
+    color: #007bff;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: .5s ease-in-out;
+}
+
+
+#toggleButton:hover {
+    background-color: #007bff;
+    color: #fff;
+    box-shadow: 0 0 10px #007bff;
+}
+
+@media only screen and (max-width: 500px){
+    #closed {
+        width: 95%;
+    }
+}
